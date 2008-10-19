@@ -4,7 +4,7 @@
 #include <boost/assign/list_inserter.hpp>
 #include <boost/spirit/iterator.hpp>
 using namespace std;
-using namespace cpp;
+using namespace vigilance;
 using namespace boost::assign;
 using namespace boost::spirit;
 

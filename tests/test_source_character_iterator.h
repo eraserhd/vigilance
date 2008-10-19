@@ -2,7 +2,7 @@
 #include <string>
 #include <source_character_iterator.h>
 using namespace std;
-using namespace cpp;
+using namespace vigilance;
 
 class test_source_character_iterator : public CxxTest::TestSuite
 {

@@ -2,7 +2,7 @@
 #include <string>
 #include <logical_line_iterator.h>
 using namespace std;
-using namespace cpp;
+using namespace vigilance;
 
 class test_logical_line_iterator : public CxxTest::TestSuite
 {

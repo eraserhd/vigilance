@@ -3,7 +3,7 @@
 
 #include <boost/iterator/iterator_adaptor.hpp>
 
-namespace cpp {
+namespace vigilance {
 
 //FIXME: concept-check: IteratorType must be a incrementable
 template<typename IteratorType>

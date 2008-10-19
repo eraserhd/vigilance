@@ -4,7 +4,7 @@
 #include <parsing_iterator_adaptor.h>
 #include <utility>
 
-namespace cpp {
+namespace vigilance {
 
 template <typename IteratorType>
 class source_character_iterator
