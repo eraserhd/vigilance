@@ -1,4 +1,0 @@
-#Links useful for development
-
-  * [http://www.kuzbass.ru:8086/docs/isocpp/ C++ Final Draft Standard]
-  * [http://www.boost.org/doc/libs/1_36_0 Boost 1.36.0 documentation]
