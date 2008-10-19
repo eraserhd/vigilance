@@ -6,7 +6,7 @@
 #include <boost/type_traits.hpp>
 #include <parsing_iterator_adaptor.h>
 
-namespace cpp {
+namespace vigilance {
 
 template <typename IteratorType>
 class trigraph_decoding_iterator

@@ -4,7 +4,7 @@
 #include <boost/iterator/iterator_adaptor.hpp>
 #include <boost/spirit/iterator.hpp>
 
-namespace cpp {
+namespace vigilance {
 
 template <typename IteratorType>
 class logical_line_iterator

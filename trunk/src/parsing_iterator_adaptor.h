@@ -3,7 +3,7 @@
 
 #include <boost/spirit/iterator.hpp>
 
-namespace cpp {
+namespace vigilance {
 
 using boost::spirit::file_position;
 

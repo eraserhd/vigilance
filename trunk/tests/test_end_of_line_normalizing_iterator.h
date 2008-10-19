@@ -3,7 +3,7 @@
 #include <iostream>
 #include <algorithm>
 using namespace std;
-using namespace cpp;
+using namespace vigilance;
 
 class test_end_of_line_normalizing_iterator : public CxxTest::TestSuite
 {
