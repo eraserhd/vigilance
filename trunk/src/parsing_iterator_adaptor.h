@@ -1,7 +1,11 @@
 #ifndef __parsing_iterator_adaptor_h__
 #define __parsing_iterator_adaptor_h__
 
+#include <boost/spirit/iterator.hpp>
+
 namespace cpp {
+
+using boost::spirit::file_position;
 
 template <
       typename Derived
@@ -10,7 +14,6 @@ template <
   >
 class parsing_iterator_adaptor
     : public boost::iterator_adaptor<
-//        parsing_iterator_adaptor<Base, Derived>
           Derived
         , typename boost::mpl::if_<
               boost::is_convertible<

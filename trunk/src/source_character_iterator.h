@@ -1,38 +1,21 @@
 #ifndef __source_character_iterator_h__
 #define __source_character_iterator_h__
 
-#include <boost/iterator/iterator_adaptor.hpp>
-#include <boost/spirit/iterator.hpp>
+#include <parsing_iterator_adaptor.h>
 #include <utility>
 
 namespace cpp {
 
 template <typename IteratorType>
 class source_character_iterator
-    : public boost::iterator_adaptor<
+    : public parsing_iterator_adaptor<
           source_character_iterator<IteratorType>
-        , typename boost::mpl::if_<
-              boost::is_convertible<
-                  typename boost::iterator_traversal<IteratorType>::type
-                , boost::forward_traversal_tag
-              >
-            , IteratorType
-            , boost::spirit::multi_pass<
-                  IteratorType
-                , boost::spirit::multi_pass_policies::input_iterator
-                , boost::spirit::multi_pass_policies::first_owner
-                , boost::spirit::multi_pass_policies::no_check
-                , boost::spirit::multi_pass_policies::std_deque
-              >
-          >::type
-        , boost::use_default
-        , boost::incrementable_traversal_tag
+        , IteratorType
     >
 {
 public:
     source_character_iterator()
-        : source_character_iterator::iterator_adaptor_(),
-          _is_end(true)
+        : source_character_iterator::parsing_iterator_adaptor_()
     {
     }
 
@@ -41,75 +24,77 @@ public:
             OtherIterator begin,
             OtherIterator end,
             typename boost::enable_if_convertible<OtherIterator, IteratorType>::type* = 0)
-        : source_character_iterator::iterator_adaptor_(begin),
-          _end(end), _is_end(false)
+        : source_character_iterator::parsing_iterator_adaptor_(begin, end)
     {
     }
 
     typedef typename source_character_iterator::iterator_adaptor_::base_type base_type;
-    typedef typename std::iterator_traits<base_type>::value_type value_type;
 
 private:
-    friend class boost::iterator_core_access;
+    friend class source_character_iterator::parsing_iterator_adaptor_;
 
-    base_type _end;
-    bool _is_end;
+    struct parse_method {
+        base_type const& _begin;
+        base_type const& _end;
+        base_type _i;
+        int _width;
+        wchar_t _c;
 
-    bool is_end() const
-    {
-        return _is_end || this->base_reference() == _end;
-    }
-
-    bool equal(const source_character_iterator<IteratorType>& rhs) const
-    {
-        return (is_end() && rhs.is_end()) || this->base_reference() == _end;
-    }
-
-    std::pair<int, wchar_t> parse() const
-    {
-        base_type i(this->base_reference());
-        std::pair<int, wchar_t> result(1,*i);
-
-        if (*i != L'\\')
-            return result;
-
-        ++i;
-        if (i == _end || (*i != L'u' && *i != L'U'))
-            return result;
-
-        int width = (*i == L'u') ? 4 : 8;
-        ++i;
-
-        wchar_t c = 0;
-        for (int j = 0; j < width; ++j, ++i) {
-            if (!iswxdigit(*i))
-                return result;
-
-            c<<=4;
-            if (iswdigit(*i))
-                c |= *i-L'0';
-            else
-                c |= towlower(*i)-L'a'+10;
+        inline parse_method(base_type const& begin, base_type const& end)
+            : _begin(begin), _end(end), _i(_begin)
+        {
         }
 
-        result.first = 2+width;
-        result.second = c;
-        return result;
-    }
+        inline static wchar_t hex_digit_value(wchar_t c)
+        {
+            if (iswdigit(c))
+                return c-L'0';
+            else
+                return towlower(c)-L'a'+10;
+        }
 
-    void increment()
+        inline std::pair<wchar_t, base_type> simple_character()
+        {
+            base_type i(_begin);
+            ++i;
+            return std::pair<wchar_t, base_type>(*_begin, i);
+        }
+
+        inline bool parse_hex_digits()
+        {
+            _c = 0;
+            for (int j = 0; j < _width; ++j, ++_i) {
+                if (_i == _end || !iswxdigit(*_i))
+                    return false;
+
+                _c = (_c<<4)|hex_digit_value(*_i);
+            }
+            return true;
+        }
+
+
+        inline std::pair<wchar_t, base_type> parse()
+        {
+            if (*_i != L'\\')
+                return simple_character();
+            ++_i;
+
+            if (_i == _end || (*_i != L'u' && *_i != L'U'))
+                return simple_character();
+
+            _width = (*_i == L'u') ? 4 : 8;
+            ++_i;
+
+            if (!parse_hex_digits())
+                return simple_character();
+            return std::pair<wchar_t, base_type>(_c, _i);
+        }
+    };
+
+    std::pair<wchar_t, base_type> parse() const
     {
-        pair<int, wchar_t> r(parse());
-
-        for (int i = 0; i < r.first; ++i)
-            ++ this->base_reference();
+        return parse_method(this->base_reference(), this->end_reference()).parse();
     }
-
-    value_type dereference() const
-    {
-        return parse().second;
-    }
-
 };
 
 }
