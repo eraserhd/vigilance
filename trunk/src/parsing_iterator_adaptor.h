@@ -31,6 +31,7 @@ class parsing_iterator_adaptor
           >::type
        , Value
        , boost::incrementable_traversal_tag
+       , Value
     >
 {
 public:
@@ -51,7 +52,12 @@ public:
     }
 
     typedef typename parsing_iterator_adaptor::iterator_adaptor_::base_type base_type;
-    typedef typename std::iterator_traits<base_type>::value_type value_type;
+
+    typedef typename boost::mpl::if_<
+              boost::is_same<Value, boost::use_default>
+            , typename std::iterator_traits<base_type>::value_type
+            , Value
+        >::type value_type;
 
     void set_position(file_position const& p)
     {
