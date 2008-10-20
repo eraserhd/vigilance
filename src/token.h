@@ -8,7 +8,9 @@ namespace vigilance {
 class token {
 public:
     enum type_type {
-        WHITESPACE = 1,
+        PP_WHITESPACE = 1,
+        PP_IDENTIFIER,
+        PP_OTHER_CHAR
     };
 
     typedef boost::spirit::file_position_base<std::wstring> file_position_t;
