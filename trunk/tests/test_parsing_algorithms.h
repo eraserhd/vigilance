@@ -35,4 +35,24 @@ public:
         TS_ASSERT(is_identifier_character((wchar_t)0x30fe)); // end of range
         TS_ASSERT(!is_identifier_character((wchar_t)0x30ff)); // after range
     }
+
+    void test_scan_while_stops_at_non_condition_character()
+    {
+        const string S = "Hello world";
+        string::const_iterator it = S.begin();
+
+        string result = scan_while(it, S.end(), is_identifier_character);
+        TS_ASSERT_EQUALS("Hello", result);
+        TS_ASSERT_EQUALS(' ', *it);
+    }
+
+    void test_scan_while_stops_at_end_of_input()
+    {
+        const string S = "Hello";
+        string::const_iterator it = S.begin();
+
+        string result = scan_while(it, S.end(), is_identifier_character);
+        TS_ASSERT_EQUALS("Hello", result);
+        TS_ASSERT(it == S.end());
+    }
 };
