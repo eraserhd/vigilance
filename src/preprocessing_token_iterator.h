@@ -42,20 +42,12 @@ private:
         token::file_position_t p(this->base_reference().get_position());
 
         if (iswspace(*i)) {
-            wstring spelling;
-            while (i != this->end_reference() && iswspace(*i)) {
-                spelling += *i;
-                ++i;
-            }
-            return result_type(token(token::PP_WHITESPACE, spelling, p), i);
+            wstring sp = scan_while(i, this->end_reference(), iswspace);
+            return result_type(token(token::PP_WHITESPACE, sp, p), i);
         }
         if (is_identifier_first_character(*i)) {
-            wstring spelling;
-            while (i != this->end_reference() && is_identifier_character(*i)) {
-                spelling += *i;
-                ++i;
-            }
-            return result_type(token(token::PP_IDENTIFIER, spelling, p), i);
+            wstring sp = scan_while(i, this->end_reference(), is_identifier_character);
+            return result_type(token(token::PP_IDENTIFIER, sp, p), i);
         }
 
         {
