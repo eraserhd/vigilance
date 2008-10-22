@@ -10,6 +10,7 @@ public:
     enum type_type {
         PP_WHITESPACE = 1,
         PP_IDENTIFIER,
+        PP_COMMENT,
         PP_OTHER_CHAR
     };
 

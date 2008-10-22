@@ -70,7 +70,6 @@ class test_preprocessing_token_iterator : public CxxTest::TestSuite
     }
 
 public:
-
     void test_correctly_tokenizes_whitespace()
     {
         with_input(L" \t\n\v\fHello");
@@ -95,6 +94,58 @@ public:
 
         token_(2)
             .at_column(6);
+    }
+
+    void test_tokenizes_c_style_comments()
+    {
+        with_input(L"/* Hello\n*/ ");
+
+        token_(1)
+            .has_type(token::PP_COMMENT)
+            .is_spelled(L"/* Hello\n*/")
+            .at_column(1);
+
+        token_(2)
+            .at_column(3);
+    }
+
+    void test_is_not_confused_by_extra_asterisks_before_closing_c_style_comment()
+    {
+        with_input(L"/* **/ ");
+
+        token_(1)
+            .has_type(token::PP_COMMENT)
+            .is_spelled(L"/* **/")
+            .at_column(1);
+
+        token_(2)
+            .at_column(7);
+    }
+
+    void test_is_not_confused_by_early_slash_in_c_style_comments()
+    {
+        with_input(L"/*/*/ ");
+
+        token_(1)
+            .has_type(token::PP_COMMENT)
+            .is_spelled(L"/*/*/")
+            .at_column(1);
+
+        token_(2)
+            .at_column(6);
+    }
+    
+    void test_is_not_confused_by_extra_openeer_in_c_style_comments()
+    {
+        with_input(L"/* /* */ ");
+
+        token_(1)
+            .has_type(token::PP_COMMENT)
+            .is_spelled(L"/* /* */")
+            .at_column(1);
+
+        token_(2)
+            .at_column(9);
     }
 
 };

@@ -36,26 +36,74 @@ private:
 
     typedef pair<token, base_type> result_type;
 
+    struct single_token_parser {
+        base_type i;
+        base_type const& end;
+        token::file_position_t p;
+        wstring sp;
+
+        bool accept_prefix(const wchar_t *p)
+        {
+            wstring prefix_sp;
+
+            base_type j(i);
+            while (*p) {
+                if (j == end)
+                    return false;
+                if (*p != *j)
+                    return false;
+
+                prefix_sp += *j;
+                ++p;
+                ++j;
+            }
+
+            i=j;
+            sp += prefix_sp;
+            return true;
+        }
+
+        void accept_character()
+        {
+            sp += *i;
+            ++i;
+        }
+
+        single_token_parser(base_type const& begin, base_type const& end)
+            : i(begin), end(end), p(begin.get_position())
+        {
+        }
+        
+        token::type_type internal_parse()
+        {
+            if (iswspace(*i)) {
+                sp = scan_while(i, end, iswspace);
+                return token::PP_WHITESPACE;
+            }
+            if (is_identifier_first_character(*i)) {
+                sp = scan_while(i, end, is_identifier_character);
+                return token::PP_IDENTIFIER;
+            }
+            if (accept_prefix(L"/*")) {
+                while (i != end && !accept_prefix(L"*/"))
+                    accept_character();
+                return token::PP_COMMENT;
+            }
+
+            accept_character();
+            return token::PP_OTHER_CHAR;
+        }
+
+        result_type parse()
+        {
+            token::type_type tt = internal_parse();
+            return result_type(token(tt, sp, p), i);
+        }
+    };
+
     result_type parse()
     {
-        base_type i(this->base_reference());
-        token::file_position_t p(this->base_reference().get_position());
-
-        if (iswspace(*i)) {
-            wstring sp = scan_while(i, this->end_reference(), iswspace);
-            return result_type(token(token::PP_WHITESPACE, sp, p), i);
-        }
-        if (is_identifier_first_character(*i)) {
-            wstring sp = scan_while(i, this->end_reference(), is_identifier_character);
-            return result_type(token(token::PP_IDENTIFIER, sp, p), i);
-        }
-
-        {
-            wstring spelling;
-            spelling += *i;
-            ++i;
-            return result_type(token(token::PP_OTHER_CHAR, spelling, p), i);
-        }
+        return single_token_parser(this->base_reference(), this->end_reference()).parse();
     }
 };
 
