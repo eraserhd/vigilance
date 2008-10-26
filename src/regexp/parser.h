@@ -123,17 +123,36 @@ public:
     typedef CharacterType character_type;
     typedef boost::shared_ptr<node<character_type> > shared_ptr_type;
 private:
-    shared_ptr_type inner;
+    shared_ptr_type _inner;
 
 public:
     kleene_node(shared_ptr_type const& inner)
-        : inner(inner)
+        : _inner(inner)
     {}
 
     virtual std::string repr() const
     {
-        return "(kleene " + inner->repr() + ")";
+        return "(kleene " + inner()->repr() + ")";
     }
+
+    shared_ptr_type const& inner() const
+    {
+        return _inner;
+    }
+};
+
+class parse_error : public std::exception {
+private:
+    std::string _what;
+public:
+    inline parse_error(std::string const& what) throw ()
+        : _what(what)
+    {}
+
+    virtual ~parse_error() throw () {}
+
+    virtual const char *what() const throw ()
+    { return _what.c_str(); }
 };
 
 template <typename IteratorType>
@@ -145,49 +164,53 @@ public:
     typedef boost::shared_ptr<node_type> pointer_type;
 
 private:
-    iterator_type begin, end;
+    iterator_type begin;
+    iterator_type const& end;
 
 public:
     parser(iterator_type const& begin, iterator_type const& end)
         : begin(begin), end(end)
     {}
 
-    bool parse_positional(pointer_type& result, iterator_type& begin)
+    bool parse_simple_position(pointer_type& result, iterator_type& begin)
+    {
+        result = pointer_type(new positional_node<character_type>(*begin));
+        ++begin;
+        return true;
+    }
+
+    bool parse_escaped_position(pointer_type& result, iterator_type& begin)
+    {
+        if ('\\' != *begin)
+            return false;
+
+        ++begin;
+        if (begin == end)
+            throw parse_error("incomplete backslash escape at end of input");
+        return parse_simple_position(result, begin);
+    }
+
+    bool parse_position(pointer_type& result, iterator_type& begin)
     {
         if (begin == end)
             return false;
 
-        iterator_type i(begin);
-        switch (*i) {
-        case '(': case ')': case '[': case ']': case '|': case '/': case '*':
+        switch (*begin) {
+        case '|': case '*':
             return false;
-
         case '\\':
-            ++i;
-            if (i == end) {
-                result = pointer_type(new positional_node<character_type>('\\'));
-                begin = i;
-                return true;
-            }
-            result = pointer_type(new positional_node<character_type>(*i));
-            ++i;
-            begin = i;
-            return true;
-        
+            return parse_escaped_position(result, begin);
         default:
-            result = pointer_type(new positional_node<character_type>(*i));
-            ++i;
-            begin = i;
-            return true;
+            return parse_simple_position(result, begin);
         }
     }
 
-    bool parse_positional_with_optional_kleene(pointer_type& result, iterator_type& begin)
+    bool parse_position_with_optional_kleene(pointer_type& result, iterator_type& begin)
     {
         if (begin == end)
             return false;
 
-        if (!parse_positional(result, begin))
+        if (!parse_position(result, begin))
             return false;
 
         if (begin == end)
@@ -203,11 +226,11 @@ public:
 
     bool parse_cat_expression(pointer_type& result, IteratorType& begin)
     {
-        if (!parse_positional_with_optional_kleene(result, begin))
+        if (!parse_position_with_optional_kleene(result, begin))
             return false;
 
         pointer_type next;
-        while (parse_positional_with_optional_kleene(next, begin))
+        while (parse_position_with_optional_kleene(next, begin))
             result = pointer_type(new cat_node<character_type>(result, next));
 
         return true;
@@ -238,18 +261,11 @@ public:
         pointer_type result;
         bool empty = !parse_or_expression(result, begin);
 
-        if (begin != end) {
-            throw 1; // FIXME:
-        }
+        if (begin != end)
+            throw parse_error("Unable to parse entire input.");
 
         if (empty)
-            result = pointer_type(new terminal_node<character_type>());
-        else {
-            result = pointer_type(new cat_node<character_type>(
-                        result,
-                        pointer_type(new terminal_node<character_type>())
-                        ));
-        }
+            result = pointer_type(new empty_node<character_type>());
         return result;
     }
 
