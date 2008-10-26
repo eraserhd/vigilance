@@ -12,7 +12,7 @@ src/identifier_characters.h: src/identifier_characters.txt util/make_identifier_
 	util/make_identifier_characters <src/identifier_characters.txt >src/identifier_characters.h
 
 tests/tests.cpp: tests/test_*.h
-	./cxxtestgen.py --error-printer -o $@ tests/test_*.h
+	./cxxtestgen.py --have-eh --error-printer -o $@ tests/test_*.h
 
 ALL_SOURCES = $(wildcard src/*.cpp) tests/tests.cpp
 ALL_OBJECTS = $(addsuffix .o,$(basename $(ALL_SOURCES)))
