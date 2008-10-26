@@ -3,7 +3,6 @@
 
 #include <string>
 #include <boost/shared_ptr.hpp>
-#include <regexp/token_iterator.h>
 
 namespace vigilance {
 namespace regexp {
